@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#FF8C42">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ChefBot">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <title>ChefBot</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=DM+Sans:wght@400;500;700&display=swap');
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%;overflow:hidden}
+    body{font-family:'DM Sans',sans-serif;background:linear-gradient(180deg,#FFF9EE 0%,#FFF3DD 50%,#FFECC8 100%);-webkit-tap-highlight-color:transparent}
+
+    #app{max-width:420px;margin:0 auto;height:100%;display:flex;flex-direction:column;position:relative;overflow:hidden}
+
+    .header{padding:20px 16px 4px;text-align:center;flex-shrink:0}
+    .header h1{font-family:'Press Start 2P',monospace;font-size:18px;color:#8B4513;text-shadow:2px 2px 0 rgba(139,69,19,0.15)}
+    .header p{font-size:12px;color:#B8956A;margin-top:4px}
+
+    .chef-area{position:relative;width:100%;height:100px;overflow:hidden;cursor:pointer;flex-shrink:0}
+    .chef-ground{position:absolute;bottom:8px;left:0;right:0;height:2px;background:rgba(0,0,0,0.08)}
+    .chef-walker{position:absolute;bottom:10px;width:52px;height:52px;image-rendering:pixelated;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.15))}
+    .speech-bubble{position:absolute;top:2px;left:50%;transform:translateX(-50%);background:#fff;border:2px solid #333;border-radius:10px;padding:4px 10px;font-size:10px;font-family:'Press Start 2P',monospace;max-width:80%;text-align:center;box-shadow:3px 3px 0 rgba(0,0,0,0.1);line-height:1.5;animation:popIn .3s ease-out;z-index:10}
+    .speech-arrow{position:absolute;bottom:-6px;left:50%;margin-left:-4px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid #333}
+
+    .content{flex:1;overflow-y:auto;padding:0 16px 100px;-webkit-overflow-scrolling:touch}
+    .content::-webkit-scrollbar{width:3px}
+    .content::-webkit-scrollbar-thumb{background:#E8D5A3;border-radius:2px}
+
+    .btn-primary{width:100%;padding:18px;background:linear-gradient(135deg,#FF8C42,#FF6B1A);border:none;border-radius:16px;color:#fff;font-family:'Press Start 2P',monospace;font-size:12px;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 15px rgba(255,107,26,0.35);animation:pulse 2s ease-in-out infinite;line-height:1.8}
+    .btn-secondary{width:100%;padding:14px;background:#fff;border:3px solid #FFB84D;border-radius:16px;color:#8B6914;font-family:'Press Start 2P',monospace;font-size:10px;cursor:pointer;margin-bottom:10px;line-height:1.8}
+    .btn-sub{font-size:9px;opacity:0.85;margin-top:3px;font-family:'DM Sans',sans-serif;display:block}
+    .btn-row{display:flex;gap:10px}
+    .btn-fridge{flex:1;padding:14px;background:linear-gradient(135deg,#7BB8E0,#5A9FCF);border:none;border-radius:16px;color:#fff;font-family:'Press Start 2P',monospace;font-size:10px;cursor:pointer;line-height:1.8}
+    .btn-book{flex:1;padding:14px;background:linear-gradient(135deg,#D4A55A,#C4903A);border:none;border-radius:16px;color:#fff;font-family:'Press Start 2P',monospace;font-size:10px;cursor:pointer;line-height:1.8}
+
+    .ingredient-tag{background:#FFF8E7;border:2px solid #FFD68A;border-radius:14px;padding:5px 10px;font-size:13px;display:inline-flex;align-items:center;gap:5px;margin:3px}
+    .remove-btn{background:none;border:none;color:#E77;cursor:pointer;font-size:14px;padding:0}
+
+    .style-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .style-btn{padding:14px 10px;background:#fff;border:2px solid #E8D5A3;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;color:#555}
+    .style-btn:active{background:#FFF8E7;border-color:#FFB84D;transform:scale(0.97)}
+
+    .recipe-card{background:#FFFDF7;border:3px solid #E8D5A3;border-radius:16px;padding:20px;margin-top:10px;animation:slideUp .4s ease-out}
+    .recipe-card h2{font-family:'Press Start 2P',monospace;font-size:14px;color:#8B6914;margin-bottom:8px;line-height:1.6}
+    .recipe-tags{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+    .recipe-tag{background:#FFF3D6;padding:4px 10px;border-radius:8px;font-size:12px;color:#8B6914}
+    .section-title{font-family:'Press Start 2P',monospace;font-size:10px;color:#B8956A;margin-bottom:8px;text-transform:uppercase}
+    .recipe-card ul,.recipe-card ol{padding-left:18px}
+    .recipe-card li{font-size:14px;margin-bottom:6px;color:#555;line-height:1.5}
+    .chef-tip{font-size:14px;color:#8B6914;background:#FFF8E7;padding:12px;border-radius:8px;line-height:1.6;font-style:italic}
+    .save-btn{background:#fff;border:2px solid #FFB84D;border-radius:10px;padding:6px 12px;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:9px;color:#8B6914;transition:all .2s}
+    .save-btn.saved{background:#FFD68A}
+
+    .fridge-panel{background:#f0f7ff;border:3px solid #7BB8E0;border-radius:16px;padding:18px;margin-top:10px;animation:slideUp .4s ease-out}
+    .fridge-panel h3{font-family:'Press Start 2P',monospace;font-size:13px;color:#2D6A9F}
+    .fridge-tag{background:#fff;border:2px solid #B8D9F0;border-radius:20px;padding:5px 12px;font-size:13px;display:inline-flex;align-items:center;gap:5px;margin:3px}
+
+    .book-item{background:#FFFDF7;border:2px solid #E8D5A3;border-radius:14px;padding:16px;cursor:pointer;transition:all .2s;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .book-item:active{border-color:#FFB84D;transform:scale(0.98)}
+    .book-item h4{font-family:'Press Start 2P',monospace;font-size:11px;color:#8B6914;margin-bottom:5px;line-height:1.5}
+
+    .loading-container{text-align:center;padding:40px 16px}
+    .loading-icon{font-size:60px;animation:float 1.5s ease-in-out infinite}
+    .loading-bar{height:8px;background:#E8D5A3;border-radius:4px;overflow:hidden;max-width:200px;margin:20px auto 0}
+    .loading-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#FFB84D,#FF8C42,#FFB84D);background-size:200% 100%;animation:shimmer 1.5s infinite;width:100%}
+    .loading-text{font-family:'Press Start 2P',monospace;font-size:11px;color:#B8956A;margin-top:14px}
+    .spinner{width:44px;height:44px;margin:0 auto 14px;border:4px solid #E8D5A3;border-top:4px solid #FF8C42;border-radius:50%;animation:spin 1s linear infinite}
+
+    .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:rgba(255,249,238,0.95);backdrop-filter:blur(10px);border-top:2px solid #E8D5A3;display:flex;justify-content:space-around;padding:10px 0 max(16px,env(safe-area-inset-bottom));align-items:flex-end;z-index:100}
+    .nav-btn{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:7px;color:#B8956A;padding:4px 12px;opacity:0.7;position:relative}
+    .nav-btn.active{color:#FF8C42;opacity:1}
+    .nav-btn .icon{font-size:18px}
+    .nav-cam{background:linear-gradient(135deg,#FF8C42,#FF6B1A);border:none;border-radius:50%;width:54px;height:54px;margin-bottom:8px;cursor:pointer;color:#fff;box-shadow:0 4px 15px rgba(255,107,26,0.4);display:flex;align-items:center;justify-content:center;font-size:22px}
+    .nav-badge{position:absolute;top:-2px;right:4px;background:#FF6B1A;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-weight:700}
+
+    .back-btn{background:none;border:none;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:10px;color:#B8956A;padding:0;margin-top:12px}
+    .panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+    .close-panel{background:none;border:none;font-size:20px;cursor:pointer;color:#999}
+
+    .bbq-scene{background:linear-gradient(180deg,#87CEEB 0%,#B8E6B8 70%,#8B7355 70%,#8B7355 100%);border-radius:16px;margin-bottom:12px;overflow:hidden;border:3px solid #E8D5A3;height:140px;position:relative;image-rendering:pixelated}
+
+    @keyframes popIn{0%{transform:translateX(-50%) scale(.8);opacity:0}100%{transform:translateX(-50%) scale(1);opacity:1}}
+    @keyframes slideUp{0%{transform:translateY(16px);opacity:0}100%{transform:translateY(0);opacity:1}}
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    @keyframes smokeRise{0%{transform:translateY(0) scale(1);opacity:.5}100%{transform:translateY(-16px) scale(1.6);opacity:0}}
+    @keyframes flame{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.6)}}
+    @keyframes sizzle{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}
+    @keyframes foodFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-5px) rotate(2deg)}}
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="header">
+      <h1>🍳 ChefBot</h1>
+      <p>Ton petit chef pixel propulsé par l'IA</p>
+    </div>
+    <div class="chef-area" onclick="chefSpeak()">
+      <div class="chef-ground"></div>
+      <div class="chef-walker" id="chef-walker"></div>
+      <div class="speech-bubble" id="speech-bubble" style="display:none">
+        <span id="speech-text"></span>
+        <div class="speech-arrow"></div>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+    <div class="bottom-nav" id="bottom-nav">
+      <button class="nav-btn active" onclick="goHome()"><span class="icon">🏠</span><span>Accueil</span></button>
+      <button class="nav-btn" onclick="showFridge()"><span class="icon">🧊</span><span>Frigo</span></button>
+      <button class="nav-cam" onclick="triggerPhoto()">📸</button>
+      <button class="nav-btn" onclick="showBook()" style="position:relative"><span class="icon">📖</span><span>Recettes</span><span class="nav-badge" id="book-badge" style="display:none">0</span></button>
+    </div>
+  </div>
+  <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)"/>
+
+  <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
+    let currentScreen = "home";
+    let fridgeItems = JSON.parse(localStorage.getItem('chefbot-fridge') || '[{"name":"Beurre","qty":""},{"name":"Huile d\'olive","qty":""},{"name":"Sel","qty":""},{"name":"Poivre","qty":""},{"name":"Ail","qty":""}]');
+    let savedRecipes = JSON.parse(localStorage.getItem('chefbot-recipes') || '[]');
+    let detectedIngredients = [];
+    let currentRecipe = null;
+    let chefFrame = 0, chefPosX = 50, chefDir = 1;
+
+    function saveFridge() { localStorage.setItem('chefbot-fridge', JSON.stringify(fridgeItems)); }
+    function saveRecipes() { localStorage.setItem('chefbot-recipes', JSON.stringify(savedRecipes)); }
+
+    const CHEF = [
+      `<svg viewBox="0 0 32 36" xmlns="http://www.w3.org/2000/svg"><rect x="11" y="0" width="10" height="2" fill="#FAFAFA"/><rect x="10" y="1" width="12" height="2" fill="#FAFAFA"/><rect x="10" y="2" width="12" height="3" fill="#fff"/><rect x="9" y="4" width="14" height="2" fill="#fff"/><rect x="9" y="6" width="14" height="2" fill="#EDEDED"/><rect x="9" y="8" width="14" height="8" fill="#FFD6A0"/><rect x="11" y="10" width="3" height="2" fill="#333"/><rect x="18" y="10" width="3" height="2" fill="#333"/><rect x="13" y="13" width="2" height="1" fill="#8B5E3C"/><rect x="17" y="13" width="2" height="1" fill="#8B5E3C"/><rect x="14" y="14" width="4" height="1" fill="#E88"/><rect x="12" y="16" width="8" height="2" fill="#D32F2F"/><rect x="14" y="17" width="4" height="2" fill="#D32F2F"/><rect x="8" y="18" width="16" height="12" fill="#fff"/><rect x="8" y="18" width="16" height="1" fill="#EDEDED"/><rect x="15" y="20" width="2" height="2" fill="#FFD700"/><rect x="15" y="24" width="2" height="2" fill="#FFD700"/><rect x="6" y="19" width="3" height="7" fill="#FFD6A0"/><rect x="23" y="19" width="3" height="7" fill="#FFD6A0"/><rect x="10" y="30" width="5" height="3" fill="#333"/><rect x="17" y="30" width="5" height="3" fill="#333"/><rect x="9" y="33" width="6" height="2" fill="#222"/><rect x="17" y="33" width="6" height="2" fill="#222"/></svg>`,
+      `<svg viewBox="0 0 32 36" xmlns="http://www.w3.org/2000/svg"><rect x="11" y="1" width="10" height="2" fill="#FAFAFA"/><rect x="10" y="2" width="12" height="2" fill="#FAFAFA"/><rect x="10" y="3" width="12" height="3" fill="#fff"/><rect x="9" y="5" width="14" height="2" fill="#fff"/><rect x="9" y="7" width="14" height="2" fill="#EDEDED"/><rect x="9" y="9" width="14" height="8" fill="#FFD6A0"/><rect x="11" y="11" width="3" height="2" fill="#333"/><rect x="18" y="11" width="3" height="2" fill="#333"/><rect x="13" y="14" width="2" height="1" fill="#8B5E3C"/><rect x="17" y="14" width="2" height="1" fill="#8B5E3C"/><rect x="14" y="15" width="4" height="1" fill="#E88"/><rect x="12" y="17" width="8" height="2" fill="#D32F2F"/><rect x="14" y="18" width="4" height="2" fill="#D32F2F"/><rect x="8" y="19" width="16" height="12" fill="#fff"/><rect x="8" y="19" width="16" height="1" fill="#EDEDED"/><rect x="15" y="21" width="2" height="2" fill="#FFD700"/><rect x="15" y="25" width="2" height="2" fill="#FFD700"/><rect x="6" y="20" width="3" height="7" fill="#FFD6A0"/><rect x="23" y="20" width="3" height="7" fill="#FFD6A0"/><rect x="10" y="31" width="5" height="2" fill="#333"/><rect x="17" y="31" width="5" height="2" fill="#333"/><rect x="9" y="33" width="6" height="2" fill="#222"/><rect x="17" y="33" width="6" height="2" fill="#222"/></svg>`,
+    ];
+
+    // Chef animation
+    setInterval(() => {
+      chefFrame = (chefFrame+1)%2;
+      const w = document.getElementById("chef-walker");
+      if(w){w.innerHTML=CHEF[chefFrame];chefPosX+=chefDir*1.5;if(chefPosX>=85)chefDir=-1;if(chefPosX<=15)chefDir=1;w.style.left=chefPosX+"%";w.style.transform=`translateX(-50%) scaleX(${chefDir})`}
+    }, 500);
+
+    function chefSpeak(msg){
+      const p=["Montre-moi tes ingrédients!","On cuisine quoi?","J'ai faim! 🍕","Prends une photo!","Chef Bot à ton service!"];
+      const t=msg||p[Math.floor(Math.random()*p.length)];
+      document.getElementById("speech-text").textContent=t;
+      document.getElementById("speech-bubble").style.display="block";
+      setTimeout(()=>{document.getElementById("speech-bubble").style.display="none"},3500);
+    }
+
+    function goHome(){currentScreen="home";renderScreen();chefSpeak("On cuisine quoi?")}
+    function showFridge(){currentScreen="fridge";renderScreen();chefSpeak("Ton frigo! 🧊")}
+    function showBook(){currentScreen="book";renderScreen();chefSpeak("Tes recettes! 📖")}
+    function triggerPhoto(){document.getElementById("file-input").click()}
+    function updateBadge(){const b=document.getElementById("book-badge");if(savedRecipes.length>0){b.style.display="flex";b.textContent=savedRecipes.length}else{b.style.display="none"}}
+
+    // AI
+    async function aiIdentify(base64){
+      try{
+        const mt=base64.startsWith("data:image/png")?"image/png":"image/jpeg";
+        const raw=base64.split(",")[1];
+        const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:[{type:"image",source:{type:"base64",media_type:mt,data:raw}},{type:"text",text:"Liste UNIQUEMENT les ingrédients de cuisine visibles, en français, séparés par des virgules. Juste les noms."}]}]})});
+        const data=await res.json();return(data.content?.map(c=>c.text||"").join("")||"").split(",").map(s=>s.trim()).filter(Boolean);
+      }catch(e){return null}
+    }
+
+    async function aiRecipe(ingredients,style){
+      try{
+        const ingList=ingredients.map(i=>`${i.name}${i.qty?" ("+i.qty+")":""}`).join(", ");
+        const fridgeList=fridgeItems.map(i=>`${i.name}${i.qty?" ("+i.qty+")":""}`).join(", ");
+        const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:`Tu es un chef québécois fun. Choisis les meilleurs ingrédients pour une super recette ${style}. Pas obligé de tous les utiliser.\n\nDisponibles: ${ingList}\nFrigo: ${fridgeList}\n\nRéponds UNIQUEMENT en JSON:\n{"name":"...","time":"XX min","difficulty":"...","servings":"...","ingredients":["..."],"steps":["..."],"tips":"..."}`}]})});
+        const data=await res.json();const text=data.content?.map(c=>c.text||"").join("")||"";
+        return JSON.parse(text.replace(/```json|```/g,"").trim());
+      }catch(e){return null}
+    }
+
+    async function handlePhoto(e){
+      const file=e.target.files?.[0];if(!file)return;e.target.value="";
+      const reader=new FileReader();
+      reader.onload=async(ev)=>{
+        currentScreen="analyzing";renderScreen();chefSpeak("Hmm je regarde... 👀");
+        const ings=await aiIdentify(ev.target.result);
+        if(ings&&ings.length>0){detectedIngredients=ings.map(n=>({name:n,qty:""}));chefSpeak(ings.length+" ingrédients trouvés!");currentScreen="quantities"}
+        else{chefSpeak("Oups j'vois pas bien 😅");currentScreen="home"}
+        renderScreen();
+      };reader.readAsDataURL(file);
+    }
+
+    async function selectStyle(style){
+      currentScreen="loading";renderScreen();chefSpeak("Je mijote un truc... 🍳");
+      const recipe=await aiRecipe(detectedIngredients,style);
+      if(recipe){recipe.style=style;currentRecipe=recipe;chefSpeak("Voilà ta recette! 🎉");currentScreen="recipe"}
+      else{chefSpeak("Oups... 😅");currentScreen="style"}
+      renderScreen();
+    }
+
+    function addManualIng(){const n=document.getElementById("ing-name")?.value?.trim();const q=document.getElementById("ing-qty")?.value?.trim();if(n){detectedIngredients.push({name:n,qty:q||""});renderScreen()}}
+    function addFridgeItem(){const n=document.getElementById("fridge-name")?.value?.trim();const q=document.getElementById("fridge-qty")?.value?.trim();if(n){fridgeItems.push({name:n,qty:q||""});saveFridge();renderScreen()}}
+    function removeFridge(i){fridgeItems.splice(i,1);saveFridge();renderScreen()}
+    function saveCurrentRecipe(){if(currentRecipe&&!savedRecipes.find(r=>r.name===currentRecipe.name)){savedRecipes.push({...currentRecipe});saveRecipes();chefSpeak("Sauvegardé! 📖");renderScreen();updateBadge()}}
+    function deleteRecipe(i){savedRecipes.splice(i,1);saveRecipes();renderScreen();updateBadge()}
+
+    const STYLES=["🇮🇹 Italien","🇫🇷 Français","🇲🇽 Mexicain","🇯🇵 Japonais","🇮🇳 Indien","🇹🇭 Thaï","🇺🇸 Comfort Food","🇱🇧 Libanais","🇨🇳 Chinois","🔥 Surprise moi!"];
+
+    function renderScreen(){
+      const c=document.getElementById("content");
+      document.getElementById("bottom-nav").style.display=["loading","analyzing"].includes(currentScreen)?"none":"flex";
+      updateBadge();
+
+      if(currentScreen==="home"){
+        c.innerHTML=`
+          <div class="bbq-scene">
+            <svg style="position:absolute;top:8px;right:14px;width:26px;height:26px" viewBox="0 0 16 16"><rect x="6" y="0" width="4" height="2" fill="#FFD700"/><rect x="6" y="14" width="4" height="2" fill="#FFD700"/><rect x="0" y="6" width="2" height="4" fill="#FFD700"/><rect x="14" y="6" width="2" height="4" fill="#FFD700"/><rect x="4" y="4" width="8" height="8" fill="#FFE44D" rx="1"/></svg>
+            <svg style="position:absolute;bottom:10px;left:50%;margin-left:-38px;width:76px;height:54px" viewBox="0 0 40 30"><rect x="8" y="18" width="2" height="12" fill="#555"/><rect x="30" y="18" width="2" height="12" fill="#555"/><rect x="4" y="28" width="8" height="2" fill="#555"/><rect x="28" y="28" width="8" height="2" fill="#555"/><rect x="4" y="12" width="32" height="8" fill="#444"/><rect x="6" y="14" width="28" height="4" fill="#333"/><rect x="8" y="10" width="6" height="3" fill="#8B4513" style="animation:sizzle .3s infinite"/><rect x="16" y="10" width="5" height="3" fill="#CD853F" style="animation:sizzle .4s infinite"/><rect x="24" y="10" width="7" height="2" fill="#CC6633" style="animation:sizzle .35s infinite"/><rect x="10" y="16" width="2" height="3" fill="#FF6600" style="animation:flame .4s infinite;transform-origin:bottom"/><rect x="18" y="17" width="2" height="2" fill="#FF4500" style="animation:flame .5s infinite;transform-origin:bottom"/><rect x="26" y="16" width="2" height="3" fill="#FF6600" style="animation:flame .35s infinite;transform-origin:bottom"/></svg>
+            <div style="position:absolute;bottom:56px;left:50%;margin-left:-6px;width:6px;height:6px;border-radius:50%;background:rgba(180,180,180,0.4);animation:smokeRise 2s infinite"></div>
+            <div style="position:absolute;bottom:52px;left:50%;margin-left:8px;width:5px;height:5px;border-radius:50%;background:rgba(180,180,180,0.3);animation:smokeRise 2.5s infinite .5s"></div>
+            <svg style="position:absolute;bottom:12px;left:24px;width:40px;height:46px;image-rendering:pixelated" viewBox="0 0 32 40"><rect x="10" y="2" width="10" height="3" fill="#fff"/><rect x="9" y="4" width="12" height="2" fill="#fff"/><rect x="8" y="6" width="14" height="9" fill="#FFD6A0"/><rect x="10" y="8" width="4" height="2" fill="#333"/><rect x="16" y="8" width="4" height="2" fill="#333"/><rect x="14" y="9" width="2" height="1" fill="#333"/><rect x="12" y="12" width="6" height="1" fill="#E88"/><rect x="7" y="15" width="16" height="12" fill="#fff"/><rect x="13" y="16" width="4" height="3" fill="#FF6B1A"/><rect x="22" y="16" width="8" height="2" fill="#FFD6A0"/><rect x="28" y="14" width="2" height="6" fill="#888"/><rect x="2" y="17" width="6" height="2" fill="#FFD6A0"/><rect x="9" y="27" width="5" height="5" fill="#2255AA"/><rect x="16" y="27" width="5" height="5" fill="#2255AA"/><rect x="8" y="32" width="6" height="2" fill="#8B4513"/><rect x="16" y="32" width="6" height="2" fill="#8B4513"/></svg>
+            <svg style="position:absolute;top:16px;right:48px;width:22px;height:22px;animation:foodFloat 3s ease-in-out infinite" viewBox="0 0 16 16"><rect x="4" y="2" width="8" height="2" fill="#FFD700"/><rect x="2" y="6" width="12" height="2" fill="#FFD700"/><rect x="0" y="11" width="16" height="2" fill="#DEB887"/><rect x="5" y="5" width="2" height="2" fill="#CC3333"/></svg>
+            <svg style="position:absolute;top:30px;left:10px;width:20px;height:20px;animation:foodFloat 2.5s ease-in-out infinite .5s" viewBox="0 0 16 16"><rect x="1" y="6" width="14" height="4" fill="#F5DEB3"/><rect x="3" y="6" width="3" height="2" fill="#5A8F3C"/><rect x="7" y="6" width="3" height="2" fill="#CC3333"/><rect x="0" y="10" width="16" height="2" fill="#DEB887"/></svg>
+          </div>
+          <button class="btn-primary" onclick="triggerPhoto()">📸 Prends une photo<span class="btn-sub">L'IA identifie tes ingrédients!</span></button>
+          <button class="btn-secondary" onclick="currentScreen='manual';detectedIngredients=[];renderScreen();chefSpeak('Dis-moi c\\'que t\\'as!')">✏️ Écrire mes ingrédients</button>
+          <div class="btn-row">
+            <button class="btn-fridge" onclick="showFridge()">🧊 Frigo<span class="btn-sub">${fridgeItems.length} items</span></button>
+            <button class="btn-book" onclick="showBook()">📖 Recettes<span class="btn-sub">${savedRecipes.length} sauvées</span></button>
+          </div>`;
+      }
+      else if(currentScreen==="analyzing"){c.innerHTML=`<div class="loading-container"><div class="spinner"></div><p class="loading-text">L'IA analyse ta photo...</p></div>`}
+      else if(currentScreen==="quantities"){
+        let rows=detectedIngredients.map((ing,i)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="flex:2;font-size:14px;font-weight:600;color:#555">${ing.name}</span><input id="qty-${i}" value="${ing.qty}" placeholder="Qté" style="flex:1;padding:8px;border:2px solid #FFD68A;border-radius:8px;font-size:13px;outline:none" onchange="detectedIngredients[${i}].qty=this.value"/><button onclick="detectedIngredients.splice(${i},1);renderScreen()" class="remove-btn">×</button></div>`).join("");
+        c.innerHTML=`<div style="background:#fff;border:3px solid #FFB84D;border-radius:16px;padding:16px"><h3 style="font-family:'Press Start 2P',monospace;font-size:11px;color:#8B6914;margin-bottom:4px">Ingrédients trouvés</h3><p style="font-size:12px;color:#B8956A;margin-bottom:10px;font-style:italic">Ajoute les quantités!</p>${rows}<button onclick="currentScreen='style';renderScreen();chefSpeak('Quel style? 🤔')" style="width:100%;margin-top:12px;padding:14px;background:linear-gradient(135deg,#FF8C42,#FF6B1A);border:none;border-radius:12px;color:#fff;font-family:'Press Start 2P',monospace;font-size:11px;cursor:pointer">Continuer →</button></div><button class="back-btn" onclick="goHome()">← Retour</button>`;
+      }
+      else if(currentScreen==="manual"){
+        let tags=detectedIngredients.map((ing,i)=>`<span class="ingredient-tag">${ing.name}${ing.qty?' <span style="color:#B8956A;font-size:11px">('+ing.qty+')</span>':''}<button class="remove-btn" onclick="detectedIngredients.splice(${i},1);renderScreen()">×</button></span>`).join("");
+        c.innerHTML=`<div style="background:#fff;border:3px solid #FFB84D;border-radius:16px;padding:16px"><h3 style="font-family:'Press Start 2P',monospace;font-size:11px;color:#8B6914;margin-bottom:4px">Tes ingrédients</h3><p style="font-size:12px;color:#B8956A;margin-bottom:10px;font-style:italic">Nom + quantité dispo</p><div style="min-height:28px;margin-bottom:10px">${tags||'<span style="color:#ccc;font-size:13px;font-style:italic">Ajoute tes ingrédients...</span>'}</div><div style="display:flex;gap:6px;align-items:center"><input id="ing-name" placeholder="Ingrédient" style="flex:3;padding:10px 12px;border:2px solid #FFD68A;border-radius:10px;font-size:14px;outline:none" onkeydown="if(event.key==='Enter')addManualIng()"/><input id="ing-qty" placeholder="Qté" style="flex:1.5;padding:10px 8px;border:2px solid #FFD68A;border-radius:10px;font-size:13px;outline:none;min-width:60px" onkeydown="if(event.key==='Enter')addManualIng()"/><button style="background:#FFB84D;color:#fff;border:none;border-radius:10px;padding:10px 12px;font-family:'Press Start 2P',monospace;font-size:14px;cursor:pointer;flex-shrink:0" onclick="addManualIng()">+</button></div>${detectedIngredients.length>0?'<button onclick="currentScreen=\'style\';renderScreen();chefSpeak(\'Quel style? 🤔\')" style="width:100%;margin-top:12px;padding:14px;background:linear-gradient(135deg,#FF8C42,#FF6B1A);border:none;border-radius:12px;color:#fff;font-family:\'Press Start 2P\',monospace;font-size:11px;cursor:pointer;box-shadow:0 4px 12px rgba(255,107,26,0.3)">Continuer →</button>':''}</div><button class="back-btn" onclick="goHome()">← Retour</button>`;
+      }
+      else if(currentScreen==="style"){
+        let tags=detectedIngredients.map(i=>`<span style="background:#FFF8E7;padding:4px 8px;border-radius:8px;font-size:11px;color:#8B6914;border:1px solid #FFD68A;margin:2px;display:inline-block">${i.name}${i.qty?' ('+i.qty+')':''}</span>`).join("");
+        let btns=STYLES.map(s=>`<button class="style-btn" onclick="selectStyle('${s}')">${s}</button>`).join("");
+        c.innerHTML=`<div style="background:#fff;border-radius:12px;padding:12px;border:2px solid #E8D5A3;margin-bottom:12px"><p style="font-size:10px;color:#B8956A;margin-bottom:6px;font-family:'Press Start 2P',monospace">Ingrédients (${detectedIngredients.length}):</p>${tags}${fridgeItems.length>0?'<p style="font-size:11px;color:#6B9DC8;margin-top:6px;font-style:italic">+ '+fridgeItems.length+' du frigo</p>':''}</div><h3 style="font-family:'Press Start 2P',monospace;font-size:11px;color:#8B6914;margin-bottom:10px">Quel style?</h3><div class="style-grid">${btns}</div><button class="back-btn" onclick="goHome()">← Retour</button>`;
+      }
+      else if(currentScreen==="loading"){c.innerHTML=`<div class="loading-container"><div class="loading-icon">🍳</div><div class="loading-bar"><div class="loading-fill"></div></div><p class="loading-text">L'IA crée ta recette...</p><p style="font-size:12px;color:#ccc;margin-top:8px;font-style:italic">Quelques secondes...</p></div>`}
+      else if(currentScreen==="recipe"||currentScreen==="viewSaved"){
+        const r=currentRecipe;if(!r)return;const isSaved=savedRecipes.some(s=>s.name===r.name);const backFn=currentScreen==="viewSaved"?"currentScreen='book';renderScreen()":"goHome()";
+        c.innerHTML=`<div class="recipe-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px"><button class="back-btn" style="margin:0" onclick="${backFn}">← Retour</button><button class="save-btn ${isSaved?'saved':''}" onclick="saveCurrentRecipe()">${isSaved?'📖 Sauvegardé ✓':'📖 Sauvegarder'}</button></div><h2>${r.name}</h2><div class="recipe-tags">${r.time?'<span class="recipe-tag">⏱ '+r.time+'</span>':''}${r.difficulty?'<span class="recipe-tag">📊 '+r.difficulty+'</span>':''}${r.servings?'<span class="recipe-tag">👥 '+r.servings+'</span>':''}</div><p class="section-title">Ingrédients</p><ul>${(r.ingredients||[]).map(i=>'<li>'+i+'</li>').join("")}</ul><p class="section-title" style="margin-top:16px">Étapes</p><ol>${(r.steps||[]).map(s=>'<li>'+s+'</li>').join("")}</ol>${r.tips?'<p class="section-title" style="margin-top:16px">💡 Conseil du Chef</p><p class="chef-tip">'+r.tips+'</p>':''}</div>`;
+      }
+      else if(currentScreen==="fridge"){
+        let tags=fridgeItems.map((item,i)=>`<span class="fridge-tag"><b>${item.name}</b>${item.qty?' <span style="color:#6B9DC8;font-size:11px">('+item.qty+')</span>':''}<button class="remove-btn" onclick="removeFridge(${i})">×</button></span>`).join("");
+        c.innerHTML=`<div class="fridge-panel"><div class="panel-header"><h3>🧊 Mon Frigo</h3><button class="close-panel" onclick="goHome()">✕</button></div><p style="font-size:12px;color:#6B9DC8;margin-bottom:12px;font-style:italic">Le chef s'en souvient toujours!</p><div style="margin-bottom:12px">${tags}</div><div style="display:flex;gap:6px"><input id="fridge-name" placeholder="Ingrédient" style="flex:2;padding:10px 12px;border:2px solid #B8D9F0;border-radius:10px;font-size:14px;outline:none;background:#fff" onkeydown="if(event.key==='Enter')addFridgeItem()"/><input id="fridge-qty" placeholder="Qté" style="flex:1;padding:10px 8px;border:2px solid #B8D9F0;border-radius:10px;font-size:13px;outline:none;background:#fff" onkeydown="if(event.key==='Enter')addFridgeItem()"/><button style="background:#7BB8E0;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-family:'Press Start 2P',monospace;font-size:14px;cursor:pointer" onclick="addFridgeItem()">+</button></div></div>`;
+      }
+      else if(currentScreen==="book"){
+        let items=savedRecipes.length===0?`<div style="text-align:center;padding:40px 16px"><div style="font-size:48px;margin-bottom:14px">📖</div><p style="font-family:'Press Start 2P',monospace;font-size:11px;color:#B8956A;line-height:1.8">Ton livre est vide!</p><p style="font-size:13px;color:#ccc;margin-top:8px;font-style:italic">Sauvegarde tes recettes favorites</p></div>`:savedRecipes.map((r,i)=>`<div class="book-item" onclick="currentRecipe=savedRecipes[${i}];currentScreen='viewSaved';renderScreen()"><div><h4>${r.name}</h4><span style="font-size:11px;color:#B8956A">${r.time||''} ${r.style||''}</span></div><button style="background:none;border:none;color:#E77;cursor:pointer;font-size:18px" onclick="event.stopPropagation();deleteRecipe(${i})">🗑</button></div>`).join("");
+        c.innerHTML=`<div class="panel-header"><h3 style="font-family:'Press Start 2P',monospace;font-size:14px;color:#8B6914">📖 Mon Livre</h3><button class="close-panel" onclick="goHome()">✕</button></div>${items}`;
+      }
+    }
+
+    renderScreen();
+  </script>
+</body>
+</html>
