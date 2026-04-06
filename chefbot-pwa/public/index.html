@@ -2,12 +2,12 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=devicehh-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#FF8C42">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="ChefBot">
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="/manifest.json">h
   <link rel="apple-touch-icon" href="/icon-192.png">
   <title>ChefBot</title>
   <style>
@@ -168,7 +168,7 @@
       try{
         const mt=base64.startsWith("data:image/png")?"image/png":"image/jpeg";
         const raw=base64.split(",")[1];
-        const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:[{type:"image",source:{type:"base64",media_type:mt,data:raw}},{type:"text",text:"Liste UNIQUEMENT les ingrédients de cuisine visibles, en français, séparés par des virgules. Juste les noms."}]}]})});
+        const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:[{type:"image",source:{type:"base64",media_type:mt,data:raw}},{type:"text",text:"Liste UNIQUEMENT les ingrédients de cuisine visibles, en français, séparés par des virgules. Juste les noms."}]}]})});
         const data=await res.json();return(data.content?.map(c=>c.text||"").join("")||"").split(",").map(s=>s.trim()).filter(Boolean);
       }catch(e){return null}
     }
@@ -177,7 +177,7 @@
       try{
         const ingList=ingredients.map(i=>`${i.name}${i.qty?" ("+i.qty+")":""}`).join(", ");
         const fridgeList=fridgeItems.map(i=>`${i.name}${i.qty?" ("+i.qty+")":""}`).join(", ");
-        const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:`Tu es un chef québécois fun. Choisis les meilleurs ingrédients pour une super recette ${style}. Pas obligé de tous les utiliser.\n\nDisponibles: ${ingList}\nFrigo: ${fridgeList}\n\nRéponds UNIQUEMENT en JSON:\n{"name":"...","time":"XX min","difficulty":"...","servings":"...","ingredients":["..."],"steps":["..."],"tips":"..."}`}]})});
+        const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:`Tu es un chef québécois fun. Choisis les meilleurs ingrédients pour une super recette ${style}. Pas obligé de tous les utiliser.\n\nDisponibles: ${ingList}\nFrigo: ${fridgeList}\n\nRéponds UNIQUEMENT en JSON:\n{"name":"...","time":"XX min","difficulty":"...","servings":"...","ingredients":["..."],"steps":["..."],"tips":"..."}`}]})});
         const data=await res.json();const text=data.content?.map(c=>c.text||"").join("")||"";
         return JSON.parse(text.replace(/```json|```/g,"").trim());
       }catch(e){return null}
